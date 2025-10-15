@@ -61,6 +61,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  useEffect(() => {
+    if (token) {
+      const validateAndFetch = async () => {
+        const isValid = await validateToken(token);
+        if (isValid) {
+          fetchUserProfile();
+        } else {
+          logout();
+        }
+      };
+      validateAndFetch();
+    }
+  }, [token]);
+
+  const validateToken = async (token: string) => {
+    try {
+      const response = await axios.get("http://localhost:3005/auth/validate", {
+        params: { token },
+      });
+
+      return response.data.valid;
+    } catch (error) {
+      console.error("Token validation failed:", error);
+      return false;
+    }
+  };
+
   const fetchUserProfile = async () => {
     try {
       const response = await API.get("/auth/profile");
@@ -112,7 +139,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw new Error(error.response?.data?.message || "Signup failed");
     }
   };
-
 
   const logout = () => {
     localStorage.removeItem("token");

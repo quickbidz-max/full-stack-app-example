@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Product } from './entity/product.entity';
-import { FindOptionsWhere, Repository, Like, FindManyOptions } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateResult } from 'typeorm/browser';
 import { DeleteResult } from 'typeorm/browser';

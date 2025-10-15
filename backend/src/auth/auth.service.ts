@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/user/entity/user.entity';
+import { User } from '../user/entity/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
@@ -43,7 +43,6 @@ export class AuthService {
     const user = await this.userRepository.findOne({
       where: [{ email: emailOrUsername }, { userName: emailOrUsername }],
     });
-    console.log('data', emailOrUsername, password, user);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -59,5 +58,17 @@ export class AuthService {
       access_token: token,
       user: userWithoutPassword,
     };
+  }
+
+  async validate(token: string) {
+    try {
+      const validate = this.jwtService.verify(token);
+      if (validate) {
+        return { valid: true };
+      }
+      return { valid: false };
+    } catch (error) {
+      return { valid: false };
+    }
   }
 }
