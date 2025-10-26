@@ -10,7 +10,7 @@ import { ProductQueryDto } from './dto/product-query.dto';
 export class ProductService {
   constructor(
     @InjectRepository(Product)
-    private userRepository: Repository<Product>,
+    private productRepository: Repository<Product>,
   ) {}
 
   async findAll(queryDto: ProductQueryDto) {
@@ -31,7 +31,7 @@ export class ProductService {
 
     const skip = ((page || 1) - 1) * (limit || 10);
 
-    const [products, total] = await this.userRepository.findAndCount({
+    const [products, total] = await this.productRepository.findAndCount({
       where:
         Object.keys(whereConditions).length > 0 ? whereConditions : undefined,
       order,
@@ -49,15 +49,15 @@ export class ProductService {
   }
 
   create(product: Partial<Product>): Promise<Product> {
-    const newProduct = this.userRepository.create(product);
-    return this.userRepository.save(newProduct);
+    const newProduct = this.productRepository.create(product);
+    return this.productRepository.save(newProduct);
   }
 
   update(id: number, product: Partial<Product>): Promise<UpdateResult> {
-    return this.userRepository.update(id, product);
+    return this.productRepository.update(id, product);
   }
 
   delete(id: number): Promise<DeleteResult> {
-    return this.userRepository.delete(id);
+    return this.productRepository.delete(id);
   }
 }
