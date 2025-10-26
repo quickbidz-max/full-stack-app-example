@@ -1,7 +1,8 @@
 const express = require('express');
 const { body, validationResult, query } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
-const db = require('../config/database');
+const { AppDataSource, Product } = require('../src/config/database');
+const { Like } = require('typeorm');
 
 const router = express.Router();
 
@@ -21,34 +22,28 @@ router.get('/', authenticateToken, [
 
     const { search, sortBy = 'createdAt', sortOrder = 'DESC', page = 1, limit = 10 } = req.query;
 
-    // Build WHERE clause
-    let whereClause = '';
-    let queryParams = [];
+    const productRepository = AppDataSource.getRepository(Product);
 
-    if (search) {
-      whereClause = 'WHERE product_name LIKE ?';
-      queryParams.push(`%${search}%`);
-    }
+    // Build where condition
+    const whereCondition = search ? { product_name: Like(`%${search}%`) } : {};
 
-    // Build ORDER BY clause
-    const orderBy = `ORDER BY ${sortBy} ${sortOrder}`;
+    // Build order object
+    const order = {};
+    order[sortBy] = sortOrder.toUpperCase();
 
     // Calculate offset for pagination
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
     // Get total count
-    const countQuery = `SELECT COUNT(*) as total FROM product ${whereClause}`;
-    const [countResult] = await db.execute(countQuery, queryParams);
-    const total = countResult[0].total;
+    const total = await productRepository.count({ where: whereCondition });
 
     // Get products with pagination
-    const productsQuery = `
-      SELECT * FROM product 
-      ${whereClause} 
-      ${orderBy} 
-      LIMIT ? OFFSET ?
-    `;
-    const [products] = await db.execute(productsQuery, [...queryParams, parseInt(limit), offset]);
+    const products = await productRepository.find({
+      where: whereCondition,
+      order: order,
+      skip: offset,
+      take: parseInt(limit)
+    });
 
     const totalPages = Math.ceil(total / parseInt(limit));
 
@@ -81,19 +76,20 @@ router.post('/', authenticateToken, [
 
     const { product_name, description, price, quantity, category } = req.body;
 
+    const productRepository = AppDataSource.getRepository(Product);
+
     // Create product
-    const [result] = await db.execute(
-      'INSERT INTO product (product_name, description, price, quantity, category, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
-      [product_name, description, price, quantity, category]
-    );
+    const product = productRepository.create({
+      product_name,
+      description,
+      price,
+      quantity,
+      category
+    });
 
-    // Get created product
-    const [products] = await db.execute(
-      'SELECT * FROM product WHERE id = ?',
-      [result.insertId]
-    );
+    const savedProduct = await productRepository.save(product);
 
-    res.status(201).json(products[0]);
+    res.status(201).json(savedProduct);
   } catch (error) {
     console.error('Create product error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -117,52 +113,25 @@ router.put('/:id', authenticateToken, [
     const { id } = req.params;
     const { product_name, description, price, quantity, category } = req.body;
 
-    // Check if product exists
-    const [products] = await db.execute(
-      'SELECT * FROM product WHERE id = ?',
-      [id]
-    );
+    const productRepository = AppDataSource.getRepository(Product);
 
-    if (products.length === 0) {
+    // Check if product exists
+    const product = await productRepository.findOne({
+      where: { id: parseInt(id) }
+    });
+
+    if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Build update query dynamically
-    const updateFields = [];
-    const updateValues = [];
+    // Update product fields
+    if (product_name !== undefined) product.product_name = product_name;
+    if (description !== undefined) product.description = description;
+    if (price !== undefined) product.price = price;
+    if (quantity !== undefined) product.quantity = quantity;
+    if (category !== undefined) product.category = category;
 
-    if (product_name !== undefined) {
-      updateFields.push('product_name = ?');
-      updateValues.push(product_name);
-    }
-    if (description !== undefined) {
-      updateFields.push('description = ?');
-      updateValues.push(description);
-    }
-    if (price !== undefined) {
-      updateFields.push('price = ?');
-      updateValues.push(price);
-    }
-    if (quantity !== undefined) {
-      updateFields.push('quantity = ?');
-      updateValues.push(quantity);
-    }
-    if (category !== undefined) {
-      updateFields.push('category = ?');
-      updateValues.push(category);
-    }
-
-    if (updateFields.length === 0) {
-      return res.status(400).json({ message: 'No fields to update' });
-    }
-
-    updateFields.push('updatedAt = NOW()');
-    updateValues.push(id);
-
-    await db.execute(
-      `UPDATE product SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues
-    );
+    await productRepository.save(product);
 
     res.json({ message: 'Product updated successfully' });
   } catch (error) {
@@ -176,17 +145,18 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if product exists
-    const [products] = await db.execute(
-      'SELECT * FROM product WHERE id = ?',
-      [id]
-    );
+    const productRepository = AppDataSource.getRepository(Product);
 
-    if (products.length === 0) {
+    // Check if product exists
+    const product = await productRepository.findOne({
+      where: { id: parseInt(id) }
+    });
+
+    if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    await db.execute('DELETE FROM product WHERE id = ?', [id]);
+    await productRepository.remove(product);
 
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {

@@ -1,16 +1,19 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
-const db = require('../config/database');
+const { AppDataSource, User } = require('../src/config/database');
+const { Not } = require('typeorm');
 
 const router = express.Router();
 
 // Get all users
 router.get('/', async (req, res) => {
   try {
-    const [users] = await db.execute(
-      'SELECT id, name, email, userName, dob, phone, address, city, createdAt, updatedAt FROM user ORDER BY createdAt DESC'
-    );
+    const userRepository = AppDataSource.getRepository(User);
+    const users = await userRepository.find({
+      select: ['id', 'name', 'email', 'userName', 'dob', 'phone', 'address', 'city', 'createdAt', 'updatedAt'],
+      order: { createdAt: 'DESC' }
+    });
     res.json(users);
   } catch (error) {
     console.error('Get users error:', error);
@@ -33,13 +36,17 @@ router.post('/', [
 
     const { name, email, userName, password, dob, phone, address, city } = req.body;
 
-    // Check if user already exists
-    const [existingUsers] = await db.execute(
-      'SELECT * FROM user WHERE email = ? OR userName = ?',
-      [email, userName]
-    );
+    const userRepository = AppDataSource.getRepository(User);
 
-    if (existingUsers.length > 0) {
+    // Check if user already exists
+    const existingUser = await userRepository.findOne({
+      where: [
+        { email: email },
+        { userName: userName }
+      ]
+    });
+
+    if (existingUser) {
       return res.status(400).json({ message: 'Email or Username already used' });
     }
 
@@ -48,18 +55,22 @@ router.post('/', [
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const [result] = await db.execute(
-      'INSERT INTO user (name, email, userName, password, dob, phone, address, city, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
-      [name, email, userName, hashedPassword, dob || null, phone || null, address || null, city || null]
-    );
+    const user = userRepository.create({
+      name,
+      email,
+      userName,
+      password: hashedPassword,
+      dob: dob || null,
+      phone: phone || null,
+      address: address || null,
+      city: city || null
+    });
 
-    // Get created user
-    const [users] = await db.execute(
-      'SELECT id, name, email, userName, dob, phone, address, city, createdAt, updatedAt FROM user WHERE id = ?',
-      [result.insertId]
-    );
+    const savedUser = await userRepository.save(user);
 
-    res.status(201).json(users[0]);
+    // Return user without password
+    const { password: _, ...userWithoutPassword } = savedUser;
+    res.status(201).json(userWithoutPassword);
   } catch (error) {
     console.error('Create user error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -81,72 +92,41 @@ router.put('/:id', [
     const { id } = req.params;
     const { name, email, userName, dob, phone, address, city } = req.body;
 
-    // Check if user exists
-    const [users] = await db.execute(
-      'SELECT * FROM user WHERE id = ?',
-      [id]
-    );
+    const userRepository = AppDataSource.getRepository(User);
 
-    if (users.length === 0) {
+    // Check if user exists
+    const user = await userRepository.findOne({
+      where: { id: parseInt(id) }
+    });
+
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     // Check if email or username is already used by another user
     if (email || userName) {
-      const [existingUsers] = await db.execute(
-        'SELECT * FROM user WHERE (email = ? OR userName = ?) AND id != ?',
-        [email || '', userName || '', id]
-      );
+      const existingUser = await userRepository.findOne({
+        where: [
+          { email: email || '', id: Not(parseInt(id)) },
+          { userName: userName || '', id: Not(parseInt(id)) }
+        ]
+      });
 
-      if (existingUsers.length > 0) {
+      if (existingUser) {
         return res.status(400).json({ message: 'Email or Username already used' });
       }
     }
 
-    // Build update query dynamically
-    const updateFields = [];
-    const updateValues = [];
+    // Update user fields
+    if (name !== undefined) user.name = name;
+    if (email !== undefined) user.email = email;
+    if (userName !== undefined) user.userName = userName;
+    if (dob !== undefined) user.dob = dob;
+    if (phone !== undefined) user.phone = phone;
+    if (address !== undefined) user.address = address;
+    if (city !== undefined) user.city = city;
 
-    if (name !== undefined) {
-      updateFields.push('name = ?');
-      updateValues.push(name);
-    }
-    if (email !== undefined) {
-      updateFields.push('email = ?');
-      updateValues.push(email);
-    }
-    if (userName !== undefined) {
-      updateFields.push('userName = ?');
-      updateValues.push(userName);
-    }
-    if (dob !== undefined) {
-      updateFields.push('dob = ?');
-      updateValues.push(dob);
-    }
-    if (phone !== undefined) {
-      updateFields.push('phone = ?');
-      updateValues.push(phone);
-    }
-    if (address !== undefined) {
-      updateFields.push('address = ?');
-      updateValues.push(address);
-    }
-    if (city !== undefined) {
-      updateFields.push('city = ?');
-      updateValues.push(city);
-    }
-
-    if (updateFields.length === 0) {
-      return res.status(400).json({ message: 'No fields to update' });
-    }
-
-    updateFields.push('updatedAt = NOW()');
-    updateValues.push(id);
-
-    await db.execute(
-      `UPDATE user SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues
-    );
+    await userRepository.save(user);
 
     res.json({ message: 'User updated successfully' });
   } catch (error) {
@@ -160,17 +140,18 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if user exists
-    const [users] = await db.execute(
-      'SELECT * FROM user WHERE id = ?',
-      [id]
-    );
+    const userRepository = AppDataSource.getRepository(User);
 
-    if (users.length === 0) {
+    // Check if user exists
+    const user = await userRepository.findOne({
+      where: { id: parseInt(id) }
+    });
+
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    await db.execute('DELETE FROM user WHERE id = ?', [id]);
+    await userRepository.remove(user);
 
     res.json({ message: 'User deleted successfully' });
   } catch (error) {

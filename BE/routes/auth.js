@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const db = require('../config/database');
+const { AppDataSource, User } = require('../src/config/database');
 
 const router = express.Router();
 
@@ -21,13 +21,17 @@ router.post('/signup', [
 
     const { name, email, userName, password } = req.body;
 
-    // Check if user already exists
-    const [existingUsers] = await db.execute(
-      'SELECT * FROM user WHERE email = ? OR userName = ?',
-      [email, userName]
-    );
+    const userRepository = AppDataSource.getRepository(User);
 
-    if (existingUsers.length > 0) {
+    // Check if user already exists
+    const existingUser = await userRepository.findOne({
+      where: [
+        { email: email },
+        { userName: userName }
+      ]
+    });
+
+    if (existingUser) {
       return res.status(400).json({ message: 'Email or Username already used' });
     }
 
@@ -35,10 +39,14 @@ router.post('/signup', [
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    await db.execute(
-      'INSERT INTO user (name, email, userName, password, createdAt, updatedAt) VALUES (?, ?, ?, ?, NOW(), NOW())',
-      [name, email, userName, hashedPassword]
-    );
+    const user = userRepository.create({
+      name,
+      email,
+      userName,
+      password: hashedPassword
+    });
+
+    await userRepository.save(user);
 
     res.status(201).json({ message: 'Signup successful' });
   } catch (error) {
@@ -60,17 +68,19 @@ router.post('/login', [
 
     const { emailOrUsername, password } = req.body;
 
-    // Find user by email or username
-    const [users] = await db.execute(
-      'SELECT * FROM user WHERE email = ? OR userName = ?',
-      [emailOrUsername, emailOrUsername]
-    );
+    const userRepository = AppDataSource.getRepository(User);
 
-    if (users.length === 0) {
+    // Find user by email or username
+    const user = await userRepository.findOne({
+      where: [
+        { email: emailOrUsername },
+        { userName: emailOrUsername }
+      ]
+    });
+
+    if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-
-    const user = users[0];
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -106,16 +116,17 @@ router.get('/profile', async (req, res) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const [users] = await db.execute(
-      'SELECT * FROM user WHERE id = ?',
-      [decoded.sub]
-    );
+    const userRepository = AppDataSource.getRepository(User);
+    
+    const user = await userRepository.findOne({
+      where: { id: decoded.sub }
+    });
 
-    if (users.length === 0) {
+    if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    const { password, ...userWithoutPassword } = users[0];
+    const { password, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
   } catch (error) {
     console.error('Profile error:', error);
