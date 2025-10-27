@@ -4,6 +4,8 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ProductModule } from './product/product.module';
 import { ConfigModule } from '@nestjs/config';
+import { User } from './user/entity/user.entity';
+import { Product } from './product/entity/product.entity';
 
 @Module({
   imports: [
@@ -15,8 +17,9 @@ import { ConfigModule } from '@nestjs/config';
       username: 'root',
       password: '12345',
       database: 'test_db',
-      autoLoadEntities: true,
-      synchronize: true,
+      synchronize: false,
+      logging: false,
+      entities: [User, Product],
     }),
     AuthModule,
     UserModule,
