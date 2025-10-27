@@ -17,6 +17,8 @@ import { JwtGuard } from '../auth/jwt/jwt.guard';
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @UseGuards(JwtGuard)
   @Get()
   getAll(): Promise<User[]> {
     return this.userService.findAll();
@@ -27,6 +29,7 @@ export class UserController {
     return this.userService.create(body);
   }
 
+  @UseGuards(JwtGuard)
   @Put(':id')
   updateUser(
     @Param('id') id: number,

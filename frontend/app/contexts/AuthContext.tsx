@@ -54,11 +54,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     if (savedToken) {
+      setIsLoading(true);
       setToken(savedToken);
       fetchUserProfile();
-    } else {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
