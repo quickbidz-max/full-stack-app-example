@@ -52,6 +52,7 @@ import {
 import { showToast } from "@/lib/toast";
 import { Plus, Edit, Trash2, Search, Loader2 } from "lucide-react";
 import API from "../services/api";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export interface Product {
   id: number;
@@ -76,7 +77,7 @@ export default function ProductsPage() {
     quantity: "",
     category: "",
   });
-
+  
   // Pagination and filtering state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -85,9 +86,19 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
+  // Debounced search text - delays API calls by 500ms
+  const debouncedSearchText = useDebounce(searchText, 500);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    if (debouncedSearchText !== searchText) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearchText, searchText]);
+
   useEffect(() => {
     fetchProducts();
-  }, [currentPage, pageSize, searchText, sortBy, sortOrder]);
+  }, [currentPage, pageSize, debouncedSearchText, sortBy, sortOrder]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -97,9 +108,9 @@ export default function ProductsPage() {
         limit: pageSize.toString(),
         sortBy,
         sortOrder,
-        ...(searchText && { search: searchText }),
+        ...(debouncedSearchText && { search: debouncedSearchText }),
       });
-
+      
       const response = await API.get(`/product?${params}`);
       setProducts(response.data.data);
       setTotal(response.data.total);
@@ -201,12 +212,19 @@ export default function ProductsPage() {
               <div className="mb-4 flex flex-wrap gap-4 items-center p-6">
                 <div className="flex items-center gap-2">
                   <Search className="h-4 w-4" />
-                  <Input
-                    placeholder="Search products..."
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    className="w-48 input-enhanced"
-                  />
+                  <div className="relative">
+                    <Input
+                      placeholder="Search products..."
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                      className="w-48 input-enhanced"
+                    />
+                    {searchText !== debouncedSearchText && (
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
