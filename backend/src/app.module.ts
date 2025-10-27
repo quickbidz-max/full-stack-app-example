@@ -17,7 +17,7 @@ import { Product } from './product/entity/product.entity';
       username: 'root',
       password: '12345',
       database: 'test_db',
-      synchronize: false,
+      synchronize: true,
       logging: false,
       entities: [User, Product],
     }),
