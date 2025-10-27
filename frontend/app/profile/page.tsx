@@ -78,16 +78,16 @@ export default function ProfilePage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Navigation />
         <div className="p-6">
           <div className="max-w-4xl mx-auto">
             <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900">User Profile</h2>
-              <p className="text-gray-600">Manage your account information</p>
+              <h2 className="text-3xl font-bold text-foreground">User Profile</h2>
+              <p className="text-muted-foreground">Manage your account information</p>
             </div>
 
-            <Card className="shadow-sm">
+            <Card className="card-enhanced">
               <CardHeader>
                 <CardTitle>Profile Information</CardTitle>
                 <CardDescription>Update your personal details</CardDescription>
@@ -102,6 +102,7 @@ export default function ProfilePage() {
                       placeholder="Enter your full name"
                       value={formData.name}
                       onChange={handleInputChange}
+                      className="input-enhanced"
                       required
                     />
                   </div>
@@ -115,6 +116,7 @@ export default function ProfilePage() {
                       placeholder="Enter your email"
                       value={formData.email}
                       onChange={handleInputChange}
+                      className="input-enhanced"
                       required
                     />
                   </div>
@@ -127,6 +129,7 @@ export default function ProfilePage() {
                       placeholder="Enter your username"
                       value={formData.userName}
                       onChange={handleInputChange}
+                      className="input-enhanced"
                       required
                     />
                   </div>
@@ -149,33 +152,33 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            <Card className="mt-6 shadow-sm">
+            <Card className="card-enhanced mt-6">
               <CardHeader>
                 <CardTitle>Account Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex justify-between items-center p-4 bg-gray-50 rounded">
+                <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
                   <div>
                     <p className="font-semibold">User ID</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Unique identifier for your account
                     </p>
                   </div>
-                  <code className="text-sm bg-gray-200 px-2 py-1 rounded">{user.id}</code>
+                  <code className="text-sm bg-muted px-2 py-1 rounded">{user.id}</code>
                 </div>
 
-                <div className="flex justify-between items-center p-4 bg-gray-50 rounded">
+                <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
                   <div>
                     <p className="font-semibold">Account Status</p>
-                    <p className="text-sm text-gray-600">Current status of your account</p>
+                    <p className="text-sm text-muted-foreground">Current status of your account</p>
                   </div>
-                  <span className="text-green-600 font-medium">Active</span>
+                  <span className="text-chart-1 font-medium">Active</span>
                 </div>
 
-                <div className="flex justify-between items-center p-4 bg-gray-50 rounded">
+                <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
                   <div>
                     <p className="font-semibold">Member Since</p>
-                    <p className="text-sm text-gray-600">When you joined the platform</p>
+                    <p className="text-sm text-muted-foreground">When you joined the platform</p>
                   </div>
                   <span>Today</span>
                 </div>

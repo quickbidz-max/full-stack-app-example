@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { User, LogOut, LayoutDashboard, Package, UserCircle } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function Navigation() {
   const { user, logout } = useAuth();
@@ -23,22 +24,22 @@ export default function Navigation() {
   };
 
   return (
-    <header className="bg-white shadow-sm px-6 flex items-center justify-between h-16">
+    <header className="nav-enhanced sticky top-0 z-50 px-6 flex items-center justify-between h-16">
       <div className="flex items-center">
-        <Link href="/dashboard" className="text-xl font-bold text-blue-600 mr-8">
+        <Link href="/dashboard" className="text-xl font-bold text-primary mr-8 hover:text-primary/80 transition-colors">
           MyApp
         </Link>
         <nav className="flex items-center space-x-6">
           <Link 
             href="/dashboard" 
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <LayoutDashboard className="h-4 w-4" />
             <span>Dashboard</span>
           </Link>
           <Link 
             href="/products" 
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <Package className="h-4 w-4" />
             <span>Products</span>
@@ -47,9 +48,10 @@ export default function Navigation() {
       </div>
       
       <div className="flex items-center space-x-4">
-        <span className="text-gray-600">
+        <span className="text-muted-foreground text-sm">
           Welcome, {user?.name || user?.userName}
         </span>
+        <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center space-x-2">
@@ -57,14 +59,14 @@ export default function Navigation() {
               <span>{user?.userName}</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem asChild>
               <Link href="/profile" className="flex items-center space-x-2">
                 <UserCircle className="h-4 w-4" />
                 <span>Profile</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout} className="flex items-center space-x-2">
+            <DropdownMenuItem onClick={handleLogout} className="flex items-center space-x-2 text-destructive focus:text-destructive">
               <LogOut className="h-4 w-4" />
               <span>Logout</span>
             </DropdownMenuItem>

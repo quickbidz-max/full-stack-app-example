@@ -3,16 +3,52 @@
 import React, { useState, useEffect } from "react";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Navigation from "../components/Navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { showToast } from "@/lib/toast";
 import { Plus, Edit, Trash2, Search, Loader2 } from "lucide-react";
 import API from "../services/api";
@@ -40,7 +76,7 @@ export default function ProductsPage() {
     quantity: "",
     category: "",
   });
-  
+
   // Pagination and filtering state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -63,7 +99,7 @@ export default function ProductsPage() {
         sortOrder,
         ...(searchText && { search: searchText }),
       });
-      
+
       const response = await API.get(`/product?${params}`);
       setProducts(response.data.data);
       setTotal(response.data.total);
@@ -108,7 +144,9 @@ export default function ProductsPage() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -135,20 +173,22 @@ export default function ProductsPage() {
       setModalOpen(false);
       fetchProducts();
     } catch (error: any) {
-      showToast.error(error.response?.data?.message || "Failed to save product");
+      showToast.error(
+        error.response?.data?.message || "Failed to save product"
+      );
     }
   };
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Navigation />
         <div className="p-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-8 flex justify-between items-center">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">Products</h2>
-                <p className="text-gray-600">Manage your product inventory</p>
+                <h2 className="text-3xl font-bold text-foreground">Products</h2>
+                <p className="text-muted-foreground">Manage your product inventory</p>
               </div>
               <Button onClick={handleCreate} size="lg">
                 <Plus className="mr-2 h-4 w-4" />
@@ -156,7 +196,7 @@ export default function ProductsPage() {
               </Button>
             </div>
 
-            <Card className="shadow-sm">
+            <Card className="card-enhanced">
               {/* Search and Filter Controls */}
               <div className="mb-4 flex flex-wrap gap-4 items-center p-6">
                 <div className="flex items-center gap-2">
@@ -165,10 +205,10 @@ export default function ProductsPage() {
                     placeholder="Search products..."
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
-                    className="w-48"
+                    className="w-48 input-enhanced"
                   />
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <span className="text-sm">Sort by:</span>
                   <Select value={sortBy} onValueChange={setSortBy}>
@@ -185,10 +225,10 @@ export default function ProductsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <span className="text-sm">Order:</span>
-                  <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <Select value={sortOrder} onValueChange={(value: "ASC" | "DESC") => setSortOrder(value)}>
                     <SelectTrigger className="w-28">
                       <SelectValue />
                     </SelectTrigger>
@@ -201,7 +241,7 @@ export default function ProductsPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <Table>
+                <Table className="table-enhanced">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Product Name</TableHead>
@@ -222,19 +262,34 @@ export default function ProductsPage() {
                       </TableRow>
                     ) : products.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        <TableCell
+                          colSpan={7}
+                          className="text-center py-8 text-muted-foreground"
+                        >
                           No products found
                         </TableCell>
                       </TableRow>
                     ) : (
                       products.map((product) => (
                         <TableRow key={product.id}>
-                          <TableCell className="font-medium">{product.product_name}</TableCell>
-                          <TableCell className="max-w-xs truncate">{product.description}</TableCell>
-                          <TableCell>${parseFloat(product.price).toFixed(2)}</TableCell>
+                          <TableCell className="font-medium">
+                            {product.product_name}
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {product.description}
+                          </TableCell>
                           <TableCell>
-                            <Badge 
-                              variant={parseInt(product.quantity) > 10 ? "default" : parseInt(product.quantity) > 5 ? "secondary" : "destructive"}
+                            ${parseFloat(product.price).toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                parseInt(product.quantity) > 10
+                                  ? "default"
+                                  : parseInt(product.quantity) > 5
+                                  ? "secondary"
+                                  : "destructive"
+                              }
                             >
                               {product.quantity}
                             </Badge>
@@ -242,7 +297,9 @@ export default function ProductsPage() {
                           <TableCell>
                             <Badge variant="outline">{product.category}</Badge>
                           </TableCell>
-                          <TableCell>{new Date(product.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            {new Date(product.createdAt).toLocaleDateString()}
+                          </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
                               <Button
@@ -260,14 +317,20 @@ export default function ProductsPage() {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogTitle>
+                                      Are you sure?
+                                    </AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      This action cannot be undone. This will permanently delete the product.
+                                      This will permanently delete the product.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete(product.id)}>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(product.id)}
+                                    >
                                       Delete
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
@@ -284,8 +347,9 @@ export default function ProductsPage() {
 
               {/* Pagination */}
               <div className="flex items-center justify-between px-6 py-4 border-t">
-                <div className="text-sm text-gray-700">
-                  Showing {Math.min((currentPage - 1) * pageSize + 1, total)} to {Math.min(currentPage * pageSize, total)} of {total} products
+                <div className="text-sm text-muted-foreground">
+                  Showing {Math.min((currentPage - 1) * pageSize + 1, total)} to{" "}
+                  {Math.min(currentPage * pageSize, total)} of {total} products
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -313,9 +377,13 @@ export default function ProductsPage() {
             <Dialog open={modalOpen} onOpenChange={setModalOpen}>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
+                  <DialogTitle>
+                    {editingProduct ? "Edit Product" : "Add New Product"}
+                  </DialogTitle>
                   <DialogDescription>
-                    {editingProduct ? "Update the product information" : "Fill in the details for the new product"}
+                    {editingProduct
+                      ? "Update the product information"
+                      : "Fill in the details for the new product"}
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onFinish} className="space-y-4">
@@ -388,7 +456,11 @@ export default function ProductsPage() {
                   </div>
 
                   <div className="flex justify-end gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setModalOpen(false)}
+                    >
                       Cancel
                     </Button>
                     <Button type="submit">
