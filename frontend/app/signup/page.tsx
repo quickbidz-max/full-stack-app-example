@@ -3,13 +3,22 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { Button, Form, Input, Card, Typography, message } from 'antd';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { showToast } from '@/lib/toast';
 import Link from 'next/link';
-
-const { Title, Text } = Typography;
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    userName: '',
+    password: '',
+    confirmPassword: '',
+  });
   const { signup, token } = useAuth();
   const router = useRouter();
 
@@ -19,121 +28,138 @@ export default function SignupPage() {
     }
   }, [token, router]);
 
-  const onFinish = async (values: {
-    name: string;
-    email: string;
-    userName: string;
-    password: string;
-    confirmPassword: string;
-  }) => {
-    if (values.password !== values.confirmPassword) {
-      message.error('Passwords do not match!');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      showToast.error('Passwords do not match!');
+      return;
+    }
+
+    if (!formData.name || !formData.email || !formData.userName || !formData.password) {
+      showToast.error('Please fill in all fields');
       return;
     }
 
     setLoading(true);
     try {
-      await signup(values.name, values.email, values.userName, values.password);
-      message.success('Account created successfully!');
+      await signup(formData.name, formData.email, formData.userName, formData.password);
+      showToast.success('Account created successfully!');
       router.push('/dashboard');
     } catch (error: any) {
-      message.error(error.message);
+      showToast.error(error.message || 'Signup failed');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <Title level={2}>Create your account</Title>
-          <Text type="secondary">Join us to get started with your journey</Text>
+          <h2 className="text-3xl font-bold text-gray-900">Create your account</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Join us to get started with your journey
+          </p>
         </div>
         
         <Card className="shadow-lg">
-          <Form
-            name="signup"
-            onFinish={onFinish}
-            layout="vertical"
-            size="large"
-          >
-            <Form.Item
-              label="Full Name"
-              name="name"
-              rules={[
-                { required: true, message: 'Please input your full name!' },
-                { min: 2, message: 'Name must be at least 2 characters!' },
-              ]}
-            >
-              <Input placeholder="Enter your full name" />
-            </Form.Item>
+          <CardHeader>
+            <CardTitle>Get started</CardTitle>
+            <CardDescription>Create your account to continue</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-            <Form.Item
-              label="Email"
-              name="email"
-              rules={[
-                { required: true, message: 'Please input your email!' },
-                { type: 'email', message: 'Please enter a valid email!' },
-              ]}
-            >
-              <Input placeholder="Enter your email" />
-            </Form.Item>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-            <Form.Item
-              label="Username"
-              name="userName"
-              rules={[
-                { required: true, message: 'Please input your username!' },
-                { min: 3, message: 'Username must be at least 3 characters!' },
-                { pattern: /^[a-zA-Z0-9_]+$/, message: 'Username can only contain letters, numbers, and underscores!' },
-              ]}
-            >
-              <Input placeholder="Enter your username" />
-            </Form.Item>
+              <div className="space-y-2">
+                <Label htmlFor="userName">Username</Label>
+                <Input
+                  id="userName"
+                  name="userName"
+                  type="text"
+                  placeholder="Enter your username"
+                  value={formData.userName}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-            <Form.Item
-              label="Password"
-              name="password"
-              rules={[
-                { required: true, message: 'Please input your password!' },
-                { min: 6, message: 'Password must be at least 6 characters!' },
-              ]}
-            >
-              <Input.Password placeholder="Enter your password" />
-            </Form.Item>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-            <Form.Item
-              label="Confirm Password"
-              name="confirmPassword"
-              rules={[
-                { required: true, message: 'Please confirm your password!' },
-              ]}
-            >
-              <Input.Password placeholder="Confirm your password" />
-            </Form.Item>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-            <Form.Item>
               <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
+                type="submit"
                 className="w-full"
-                size="large"
+                disabled={loading}
               >
-                Create Account
+                {loading ? 'Creating account...' : 'Create Account'}
               </Button>
-            </Form.Item>
-          </Form>
-          
-          <div className="text-center mt-4">
-            <Text>
-              Already have an account?{' '}
-              <Link href="/login" className="text-blue-600 hover:text-blue-800">
-                Sign in here
-              </Link>
-            </Text>
-          </div>
+            </form>
+            
+            <div className="text-center mt-4">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
+                  Sign in here
+                </Link>
+              </p>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>

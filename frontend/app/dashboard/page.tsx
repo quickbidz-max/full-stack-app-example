@@ -3,19 +3,18 @@
 import React, { useEffect, useState } from "react";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Navigation from "../components/Navigation";
-import { Layout, Card, Row, Col, Typography, Statistic, Button } from "antd";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-  UserOutlined,
-  ShoppingOutlined,
-  EyeOutlined,
-  EditOutlined,
-} from "@ant-design/icons";
+  User,
+  ShoppingCart,
+  Eye,
+  Edit,
+} from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "../contexts/AuthContext";
 import API from "../services/api";
-
-const { Content } = Layout;
-const { Title, Text } = Typography;
 
 export default function DashboardPage() {
   const [products, setProducts] = useState<number>(0);
@@ -34,127 +33,127 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <Layout className="min-h-screen">
+      <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <Content className="p-6 bg-gray-50">
+        <div className="p-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
-              <Title level={2}>Dashboard</Title>
-              <Text type="secondary">Welcome to your personal dashboard</Text>
+              <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+              <p className="text-gray-600">Welcome to your personal dashboard</p>
             </div>
 
-            <Row gutter={[16, 16]} className="mb-8">
-              <Col xs={24} sm={12} lg={6}>
-                <Card>
-                  <Statistic
-                    title="Profile Status"
-                    value="Complete"
-                    prefix={<UserOutlined />}
-                    valueStyle={{ color: "#3f8600" }}
-                  />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Profile Status</CardTitle>
+                  <User className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">Complete</div>
                   <div className="mt-4">
                     <Link href="/profile">
-                      <Button type="primary" icon={<EditOutlined />}>
+                      <Button className="w-full" size="sm">
+                        <Edit className="mr-2 h-4 w-4" />
                         Manage Profile
                       </Button>
                     </Link>
                   </div>
-                </Card>
-              </Col>
+                </CardContent>
+              </Card>
 
-              <Col xs={24} sm={12} lg={6}>
-                <Card>
-                  <Statistic
-                    title="Products"
-                    value={products}
-                    prefix={<ShoppingOutlined />}
-                    valueStyle={{ color: "#1890ff" }}
-                  />
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Products</CardTitle>
+                  <ShoppingCart className="h-4 w-4 text-blue-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">{products}</div>
                   <div className="mt-4">
                     <Link href="/products">
-                      <Button type="primary" icon={<EyeOutlined />}>
+                      <Button className="w-full" size="sm">
+                        <Eye className="mr-2 h-4 w-4" />
                         View Products
                       </Button>
                     </Link>
                   </div>
-                </Card>
-              </Col>
+                </CardContent>
+              </Card>
 
-              <Col xs={24} sm={12} lg={6}>
-                <Card>
-                  <Statistic
-                    title="Account Type"
-                    value="Standard"
-                    valueStyle={{ color: "#722ed1" }}
-                  />
-                </Card>
-              </Col>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Account Type</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-purple-600">Standard</div>
+                </CardContent>
+              </Card>
 
-              <Col xs={24} sm={12} lg={6}>
-                <Card>
-                  <Statistic
-                    title="Last Login"
-                    value="Today"
-                    valueStyle={{ color: "#52c41a" }}
-                  />
-                </Card>
-              </Col>
-            </Row>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Last Login</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">Today</div>
+                </CardContent>
+              </Card>
+            </div>
 
-            <Row gutter={[16, 16]}>
-              <Col xs={24} lg={12}>
-                <Card title="Quick Actions" className="h-full">
-                  <div className="space-y-4">
-                    <Link href="/profile" className="block">
-                      <Button
-                        size="large"
-                        className="w-full"
-                        icon={<UserOutlined />}
-                      >
-                        Update Profile Information
-                      </Button>
-                    </Link>
-                    <Link href="/products" className="block">
-                      <Button
-                        size="large"
-                        className="w-full"
-                        icon={<ShoppingOutlined />}
-                      >
-                        Manage Products
-                      </Button>
-                    </Link>
-                  </div>
-                </Card>
-              </Col>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Link href="/profile" className="block">
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      variant="outline"
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Update Profile Information
+                    </Button>
+                  </Link>
+                  <Link href="/products" className="block">
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      variant="outline"
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Manage Products
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
 
-              <Col xs={24} lg={12}>
-                <Card title="Recent Activity" className="h-full">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                      <div>
-                        <Text strong>Account Created</Text>
-                        <br />
-                        <Text type="secondary">Welcome to the platform!</Text>
-                      </div>
-                      <Text type="secondary">Today</Text>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-semibold">Account Created</p>
+                      <p className="text-sm text-gray-600">Welcome to the platform!</p>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                      <div>
-                        <Text strong>Profile Setup</Text>
-                        <br />
-                        <Text type="secondary">
-                          Complete your profile information
-                        </Text>
-                      </div>
-                      <Text type="secondary">Pending</Text>
-                    </div>
+                    <Badge variant="secondary">Today</Badge>
                   </div>
-                </Card>
-              </Col>
-            </Row>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-semibold">Profile Setup</p>
+                      <p className="text-sm text-gray-600">
+                        Complete your profile information
+                      </p>
+                    </div>
+                    <Badge variant="outline">Pending</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </Content>
-      </Layout>
+        </div>
+      </div>
     </ProtectedRoute>
   );
 }

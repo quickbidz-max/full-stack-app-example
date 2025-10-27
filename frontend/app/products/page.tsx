@@ -3,28 +3,19 @@
 import React, { useState, useEffect } from "react";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Navigation from "../components/Navigation";
-import {
-  Layout,
-  Card,
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Typography,
-  message,
-  Popconfirm,
-  Space,
-  Tag,
-  Select,
-  Pagination,
-} from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { showToast } from "@/lib/toast";
+import { Plus, Edit, Trash2, Search, Loader2 } from "lucide-react";
 import API from "../services/api";
-
-const { Content } = Layout;
-const { Title, Text } = Typography;
 
 export interface Product {
   id: number;
@@ -40,9 +31,15 @@ export interface Product {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [form] = Form.useForm();
+  const [formData, setFormData] = useState({
+    product_name: "",
+    description: "",
+    price: "",
+    quantity: "",
+    category: "",
+  });
   
   // Pagination and filtering state
   const [currentPage, setCurrentPage] = useState(1);
@@ -71,7 +68,7 @@ export default function ProductsPage() {
       setProducts(response.data.data);
       setTotal(response.data.total);
     } catch (error: any) {
-      message.error("Failed to fetch products");
+      showToast.error("Failed to fetch products");
     } finally {
       setLoading(false);
     }
@@ -79,321 +76,331 @@ export default function ProductsPage() {
 
   const handleCreate = () => {
     setEditingProduct(null);
-    form.resetFields();
-    setModalVisible(true);
+    setFormData({
+      product_name: "",
+      description: "",
+      price: "",
+      quantity: "",
+      category: "",
+    });
+    setModalOpen(true);
   };
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    form.setFieldsValue({
+    setFormData({
       product_name: product.product_name,
       description: product.description,
-      price: parseFloat(product.price),
-      quantity: parseInt(product.quantity),
+      price: product.price,
+      quantity: product.quantity,
       category: product.category,
     });
-    setModalVisible(true);
+    setModalOpen(true);
   };
 
   const handleDelete = async (id: number) => {
     try {
       await API.delete(`/product/${id}`);
-      message.success("Product deleted successfully");
+      showToast.success("Product deleted successfully");
       fetchProducts();
     } catch (error: any) {
-      message.error("Failed to delete product");
+      showToast.error("Failed to delete product");
     }
   };
 
-  const onFinish = async (values: any) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const onFinish = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       const productData = {
-        ...values,
-        price: values.price.toString(),
-        quantity: values.quantity.toString(),
+        ...formData,
+        price: formData.price.toString(),
+        quantity: formData.quantity.toString(),
       };
 
       if (editingProduct) {
         await API.put(`/product/${editingProduct.id}`, productData);
-        message.success("Product updated successfully");
+        showToast.success("Product updated successfully");
       } else {
         await API.post("/product", productData);
-        message.success("Product created successfully");
+        showToast.success("Product created successfully");
       }
 
-      setModalVisible(false);
+      setModalOpen(false);
       fetchProducts();
     } catch (error: any) {
-      message.error(error.response?.data?.message || "Failed to save product");
+      showToast.error(error.response?.data?.message || "Failed to save product");
     }
   };
 
-  const columns = [
-    {
-      title: "Product Name",
-      dataIndex: "product_name",
-      key: "product_name",
-    },
-    {
-      title: "Description",
-      dataIndex: "description",
-      key: "description",
-      ellipsis: true,
-    },
-    {
-      title: "Price",
-      dataIndex: "price",
-      key: "price",
-      render: (price: string) => `$${parseFloat(price).toFixed(2)}`,
-    },
-    {
-      title: "Quantity",
-      dataIndex: "quantity",
-      key: "quantity",
-      render: (quantity: string) => {
-        const qty = parseInt(quantity);
-        return (
-          <Tag color={qty > 10 ? "green" : qty > 5 ? "orange" : "red"}>
-            {qty}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: "Category",
-      dataIndex: "category",
-      key: "category",
-      render: (category: string) => <Tag color="blue">{category}</Tag>,
-    },
-    {
-      title: "Created",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date: string) => new Date(date).toLocaleDateString(),
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_: any, record: Product) => (
-        <Space>
-          <Button
-            type="primary"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            Edit
-          </Button>
-          <Popconfirm
-            title="Are you sure you want to delete this product?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button
-              type="primary"
-              danger
-              size="small"
-              icon={<DeleteOutlined />}
-            >
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
-
   return (
     <ProtectedRoute>
-      <Layout className="min-h-screen">
+      <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <Content className="p-6 bg-gray-50">
+        <div className="p-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-8 flex justify-between items-center">
               <div>
-                <Title level={2}>Products</Title>
-                <Text type="secondary">Manage your product inventory</Text>
+                <h2 className="text-3xl font-bold text-gray-900">Products</h2>
+                <p className="text-gray-600">Manage your product inventory</p>
               </div>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleCreate}
-                size="large"
-              >
+              <Button onClick={handleCreate} size="lg">
+                <Plus className="mr-2 h-4 w-4" />
                 Add Product
               </Button>
             </div>
 
             <Card className="shadow-sm">
               {/* Search and Filter Controls */}
-              <div className="mb-4 flex flex-wrap gap-4 items-center">
+              <div className="mb-4 flex flex-wrap gap-4 items-center p-6">
                 <div className="flex items-center gap-2">
-                  <SearchOutlined />
+                  <Search className="h-4 w-4" />
                   <Input
                     placeholder="Search products..."
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
-                    style={{ width: 200 }}
-                    allowClear
+                    className="w-48"
                   />
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <Text>Sort by:</Text>
-                  <Select
-                    value={sortBy}
-                    onChange={setSortBy}
-                    style={{ width: 120 }}
-                  >
-                    <Select.Option value="product_name">Name</Select.Option>
-                    <Select.Option value="category">Category</Select.Option>
-                    <Select.Option value="price">Price</Select.Option>
-                    <Select.Option value="quantity">Quantity</Select.Option>
-                    <Select.Option value="createdAt">Created</Select.Option>
-                    <Select.Option value="updatedAt">Updated</Select.Option>
+                  <span className="text-sm">Sort by:</span>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="product_name">Name</SelectItem>
+                      <SelectItem value="category">Category</SelectItem>
+                      <SelectItem value="price">Price</SelectItem>
+                      <SelectItem value="quantity">Quantity</SelectItem>
+                      <SelectItem value="createdAt">Created</SelectItem>
+                      <SelectItem value="updatedAt">Updated</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <Text>Order:</Text>
-                  <Select
-                    value={sortOrder}
-                    onChange={setSortOrder}
-                    style={{ width: 100 }}
-                  >
-                    <Select.Option value="ASC">Ascending</Select.Option>
-                    <Select.Option value="DESC">Descending</Select.Option>
+                  <span className="text-sm">Order:</span>
+                  <Select value={sortOrder} onValueChange={setSortOrder}>
+                    <SelectTrigger className="w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ASC">Ascending</SelectItem>
+                      <SelectItem value="DESC">Descending</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              <Table
-                columns={columns}
-                dataSource={products}
-                rowKey="id"
-                loading={loading}
-                pagination={{
-                  current: currentPage,
-                  pageSize: pageSize,
-                  total: total,
-                  showSizeChanger: true,
-                  showQuickJumper: true,
-                  showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} of ${total} products`,
-                  onChange: (page, size) => {
-                    setCurrentPage(page);
-                    setPageSize(size || 10);
-                  },
-                  onShowSizeChange: (current, size) => {
-                    setCurrentPage(1);
-                    setPageSize(size);
-                  },
-                }}
-              />
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                        </TableCell>
+                      </TableRow>
+                    ) : products.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                          No products found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      products.map((product) => (
+                        <TableRow key={product.id}>
+                          <TableCell className="font-medium">{product.product_name}</TableCell>
+                          <TableCell className="max-w-xs truncate">{product.description}</TableCell>
+                          <TableCell>${parseFloat(product.price).toFixed(2)}</TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={parseInt(product.quantity) > 10 ? "default" : parseInt(product.quantity) > 5 ? "secondary" : "destructive"}
+                            >
+                              {product.quantity}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{product.category}</Badge>
+                          </TableCell>
+                          <TableCell>{new Date(product.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(product)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the product.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(product.id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between px-6 py-4 border-t">
+                <div className="text-sm text-gray-700">
+                  Showing {Math.min((currentPage - 1) * pageSize + 1, total)} to {Math.min(currentPage * pageSize, total)} of {total} products
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm px-2">Page {currentPage}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage * pageSize >= total}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
             </Card>
 
-            <Modal
-              title={editingProduct ? "Edit Product" : "Add New Product"}
-              open={modalVisible}
-              onCancel={() => setModalVisible(false)}
-              footer={null}
-              width={600}
-            >
-              <Form
-                form={form}
-                layout="vertical"
-                onFinish={onFinish}
-                size="large"
-              >
-                <Form.Item
-                  label="Product Name"
-                  name="product_name"
-                  rules={[
-                    { required: true, message: "Please input product name!" },
-                  ]}
-                >
-                  <Input placeholder="Enter product name" />
-                </Form.Item>
+            {/* Product Modal */}
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
+                  <DialogDescription>
+                    {editingProduct ? "Update the product information" : "Fill in the details for the new product"}
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={onFinish} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="product_name">Product Name</Label>
+                    <Input
+                      id="product_name"
+                      name="product_name"
+                      placeholder="Enter product name"
+                      value={formData.product_name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
 
-                <Form.Item
-                  label="Description"
-                  name="description"
-                  rules={[
-                    { required: true, message: "Please input description!" },
-                  ]}
-                >
-                  <Input.TextArea
-                    rows={3}
-                    placeholder="Enter product description"
-                  />
-                </Form.Item>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      name="description"
+                      placeholder="Enter product description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      rows={3}
+                      required
+                    />
+                  </div>
 
-                <Form.Item
-                  label="Price"
-                  name="price"
-                  rules={[
-                    { required: true, message: "Please input price!" },
-                    {
-                      type: "number",
-                      min: 0,
-                      message: "Price must be positive!",
-                    },
-                  ]}
-                >
-                  <InputNumber
-                    style={{ width: "100%" }}
-                    placeholder="Enter price"
-                    prefix="$"
-                    min={0}
-                    step={0.01}
-                  />
-                </Form.Item>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="price">Price</Label>
+                      <Input
+                        id="price"
+                        name="price"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Enter price"
+                        value={formData.price}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
 
-                <Form.Item
-                  label="Quantity"
-                  name="quantity"
-                  rules={[
-                    { required: true, message: "Please input quantity!" },
-                    {
-                      type: "number",
-                      min: 0,
-                      message: "Quantity must be non-negative!",
-                    },
-                  ]}
-                >
-                  <InputNumber
-                    style={{ width: "100%" }}
-                    placeholder="Enter quantity"
-                    min={0}
-                  />
-                </Form.Item>
+                    <div className="space-y-2">
+                      <Label htmlFor="quantity">Quantity</Label>
+                      <Input
+                        id="quantity"
+                        name="quantity"
+                        type="number"
+                        min="0"
+                        placeholder="Enter quantity"
+                        value={formData.quantity}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  </div>
 
-                <Form.Item
-                  label="Category"
-                  name="category"
-                  rules={[
-                    { required: true, message: "Please input category!" },
-                  ]}
-                >
-                  <Input placeholder="Enter category" />
-                </Form.Item>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Input
+                      id="category"
+                      name="category"
+                      placeholder="Enter category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
 
-                <Form.Item className="mb-0">
-                  <Space>
-                    <Button type="primary" htmlType="submit">
-                      {editingProduct ? "Update" : "Create"}
-                    </Button>
-                    <Button onClick={() => setModalVisible(false)}>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
                       Cancel
                     </Button>
-                  </Space>
-                </Form.Item>
-              </Form>
-            </Modal>
+                    <Button type="submit">
+                      {editingProduct ? "Update" : "Create"}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
-        </Content>
-      </Layout>
+        </div>
+      </div>
     </ProtectedRoute>
   );
 }

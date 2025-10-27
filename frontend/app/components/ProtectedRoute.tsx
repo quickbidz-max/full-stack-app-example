@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { Spin } from 'antd';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,7 +22,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Spin size="large" />
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
