@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import API from "../services/api";
 import axios from "axios";
-import { Product } from "../products/page";
 
 interface User {
   id: string;

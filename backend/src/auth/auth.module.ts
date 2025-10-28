@@ -14,13 +14,12 @@ import { PassportModule } from '@nestjs/passport';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) =>
-        ({
-          secret: configService.get<string>('JWT_SECRET'),
-          signOptions: {
-            expiresIn: '8h',
-          },
-        }) as any,
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: '8h',
+        },
+      }),
       inject: [ConfigService],
     }),
   ],
