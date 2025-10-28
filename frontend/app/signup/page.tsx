@@ -18,6 +18,13 @@ export default function SignupPage() {
     userName: '',
     password: '',
     confirmPassword: '',
+    dob: '',
+    phone: '',
+    address: '',
+    city: '',
+    country: '',
+    postalCode: '',
+    bio: '',
   });
   const { signup, token } = useAuth();
   const router = useRouter();
@@ -37,13 +44,25 @@ export default function SignupPage() {
     }
 
     if (!formData.name || !formData.email || !formData.userName || !formData.password) {
-      showToast.error('Please fill in all fields');
+      showToast.error('Please fill in all required fields');
       return;
     }
 
     setLoading(true);
     try {
-      await signup(formData.name, formData.email, formData.userName, formData.password);
+      await signup(
+        formData.name, 
+        formData.email, 
+        formData.userName, 
+        formData.password,
+        formData.dob || undefined,
+        formData.phone || undefined,
+        formData.address || undefined,
+        formData.city || undefined,
+        formData.country || undefined,
+        formData.postalCode || undefined,
+        formData.bio || undefined
+      );
       showToast.success('Account created successfully!');
       router.push('/dashboard');
     } catch (error: any) {
@@ -139,6 +158,91 @@ export default function SignupPage() {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dob">Date of Birth (Optional)</Label>
+                <Input
+                  id="dob"
+                  name="dob"
+                  type="date"
+                  placeholder="Select your date of birth"
+                  value={formData.dob}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number (Optional)</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="address">Address (Optional)</Label>
+                <Input
+                  id="address"
+                  name="address"
+                  type="text"
+                  placeholder="Enter your address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="city">City (Optional)</Label>
+                <Input
+                  id="city"
+                  name="city"
+                  type="text"
+                  placeholder="Enter your city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="country">Country (Optional)</Label>
+                <Input
+                  id="country"
+                  name="country"
+                  type="text"
+                  placeholder="Enter your country"
+                  value={formData.country}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="postalCode">Postal Code (Optional)</Label>
+                <Input
+                  id="postalCode"
+                  name="postalCode"
+                  type="text"
+                  placeholder="Enter your postal code"
+                  value={formData.postalCode}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio (Optional)</Label>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  placeholder="Tell us about yourself..."
+                  value={formData.bio}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  rows={3}
                 />
               </div>
 

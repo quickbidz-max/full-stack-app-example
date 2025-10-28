@@ -3,7 +3,13 @@
 import React, { useState, useEffect } from "react";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Navigation from "../components/Navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,19 +19,26 @@ import { useAuth } from "../contexts/AuthContext";
 import API from "../services/api";
 
 interface UserProfile {
-  id: number;
+  id: string;
   name: string;
   email: string;
   userName: string;
 }
 
 export default function ProfilePage() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     userName: "",
+    dob: "",
+    phone: "",
+    city: "",
+    address: "",
+    country: "",
+    postalCode: "",
+    bio: "",
   });
 
   useEffect(() => {
@@ -34,11 +47,18 @@ export default function ProfilePage() {
         name: user.name || "",
         email: user.email || "",
         userName: user.userName || "",
+        dob: user.dob || "",
+        phone: user.phone || "",
+        city: user.city || "",
+        address: user.address || "",
+        country: user.country || "",
+        postalCode: user.postalCode || "",
+        bio: user.bio || "",
       });
     }
   }, [user]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -83,8 +103,12 @@ export default function ProfilePage() {
         <div className="p-6">
           <div className="max-w-4xl mx-auto">
             <div className="mb-8">
-              <h2 className="text-3xl font-bold text-foreground">User Profile</h2>
-              <p className="text-muted-foreground">Manage your account information</p>
+              <h2 className="text-3xl font-bold text-foreground">
+                User Profile
+              </h2>
+              <p className="text-muted-foreground">
+                Manage your account information
+              </p>
             </div>
 
             <Card className="card-enhanced">
@@ -118,6 +142,7 @@ export default function ProfilePage() {
                       onChange={handleInputChange}
                       className="input-enhanced"
                       required
+                      readOnly
                     />
                   </div>
 
@@ -131,14 +156,98 @@ export default function ProfilePage() {
                       onChange={handleInputChange}
                       className="input-enhanced"
                       required
+                      readOnly
                     />
                   </div>
 
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    size="lg"
-                  >
+                  <div className="space-y-2">
+                    <Label htmlFor="dob">Date of Birth</Label>
+                    <Input
+                      id="dob"
+                      name="dob"
+                      type="date"
+                      placeholder="Select your date of birth"
+                      value={formData.dob}
+                      onChange={handleInputChange}
+                      className="input-enhanced"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="input-enhanced"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input
+                      id="address"
+                      name="address"
+                      placeholder="Enter your address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      className="input-enhanced"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      name="city"
+                      placeholder="Enter your city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      className="input-enhanced"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country</Label>
+                    <Input
+                      id="country"
+                      name="country"
+                      placeholder="Enter your country"
+                      value={formData.country}
+                      onChange={handleInputChange}
+                      className="input-enhanced"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="postalCode">Postal Code</Label>
+                    <Input
+                      id="postalCode"
+                      name="postalCode"
+                      placeholder="Enter your postal code"
+                      value={formData.postalCode}
+                      onChange={handleInputChange}
+                      className="input-enhanced"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <textarea
+                      id="bio"
+                      name="bio"
+                      placeholder="Tell us about yourself..."
+                      value={formData.bio}
+                      onChange={handleInputChange}
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      rows={3}
+                    />
+                  </div>
+
+                  <Button type="submit" disabled={loading} size="lg">
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -164,13 +273,17 @@ export default function ProfilePage() {
                       Unique identifier for your account
                     </p>
                   </div>
-                  <code className="text-sm bg-muted px-2 py-1 rounded">{user.id}</code>
+                  <code className="text-sm bg-muted px-2 py-1 rounded">
+                    {user.id}
+                  </code>
                 </div>
 
                 <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
                   <div>
                     <p className="font-semibold">Account Status</p>
-                    <p className="text-sm text-muted-foreground">Current status of your account</p>
+                    <p className="text-sm text-muted-foreground">
+                      Current status of your account
+                    </p>
                   </div>
                   <span className="text-chart-1 font-medium">Active</span>
                 </div>
@@ -178,7 +291,9 @@ export default function ProfilePage() {
                 <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
                   <div>
                     <p className="font-semibold">Member Since</p>
-                    <p className="text-sm text-muted-foreground">When you joined the platform</p>
+                    <p className="text-sm text-muted-foreground">
+                      When you joined the platform
+                    </p>
                   </div>
                   <span>Today</span>
                 </div>

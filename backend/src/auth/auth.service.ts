@@ -18,6 +18,13 @@ export class AuthService {
     email: string,
     userName: string,
     password: string,
+    dob?: string,
+    phone?: string,
+    address?: string,
+    city?: string,
+    country?: string,
+    postalCode?: string,
+    bio?: string,
   ) {
     const existingUser = await this.userRepository.findOne({
       where: { email: email, userName: userName },
@@ -31,11 +38,25 @@ export class AuthService {
       email,
       userName,
       password: hashedPassword,
+      dob,
+      phone,
+      address,
+      city,
+      country,
+      postalCode,
+      bio,
     });
     await this.userRepository.save(newUser);
 
+    const { password: _, ...userWithoutPassword } = newUser;
+
+    const payload = { email: newUser.email, sub: newUser.id };
+    const token = this.jwtService.sign(payload);
+
     return {
       message: 'Signup successful',
+      access_token: token,
+      user: userWithoutPassword,
     };
   }
 

@@ -35,6 +35,15 @@ export class User {
   @Column({ nullable: true })
   city: string;
 
+  @Column({ nullable: true })
+  country: string;
+
+  @Column({ nullable: true })
+  postalCode: string;
+
+  @Column({ nullable: true, type: 'text' })
+  bio: string;
+
   @Column()
   @CreateDateColumn()
   createdAt: Date;

@@ -12,10 +12,17 @@ import axios from "axios";
 import { Product } from "../products/page";
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   userName: string;
+  dob?: string;
+  phone?: string;
+  city?: string;
+  address?: string;
+  country?: string;
+  postalCode?: string;
+  bio?: string;
 }
 
 interface AuthContextType {
@@ -120,7 +127,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     name: string,
     email: string,
     userName: string,
-    password: string
+    password: string,
+    dob?: string,
+    phone?: string,
+    address?: string,
+    city?: string,
+    country?: string,
+    postalCode?: string,
+    bio?: string
   ) => {
     try {
       const response = await axios.post("http://localhost:3005/auth/signup", {
@@ -128,6 +142,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email,
         userName,
         password,
+        dob,
+        phone,
+        address,
+        city,
+        country,
+        postalCode,
+        bio,
       });
 
       const { access_token, user: userData } = response.data;

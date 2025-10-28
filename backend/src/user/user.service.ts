@@ -27,11 +27,11 @@ export class UserService {
     return this.userRepository.save(newUser);
   }
 
-  update(id: number, user: Partial<User>): Promise<UpdateResult> {
+  update(id: string, user: Partial<User>): Promise<UpdateResult> {
     return this.userRepository.update(id, user);
   }
 
-  delete(id: number): Promise<DeleteResult> {
+  delete(id: string): Promise<DeleteResult> {
     return this.userRepository.delete(id);
   }
 }

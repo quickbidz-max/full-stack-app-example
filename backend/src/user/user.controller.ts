@@ -32,7 +32,7 @@ export class UserController {
   @UseGuards(JwtGuard)
   @Put(':id')
   updateUser(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() body: Partial<User>,
   ): Promise<UpdateResult> {
     return this.userService.update(id, body);
@@ -40,7 +40,7 @@ export class UserController {
 
   @UseGuards(JwtGuard)
   @Delete(':id')
-  deleteUser(@Param('id') id: number): Promise<DeleteResult> {
+  deleteUser(@Param('id') id: string): Promise<DeleteResult> {
     return this.userService.delete(id);
   }
 }

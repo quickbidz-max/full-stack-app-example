@@ -22,6 +22,13 @@ export class AuthController {
       email: string;
       userName: string;
       password: string;
+      dob?: string;
+      phone?: string;
+      address?: string;
+      city?: string;
+      country?: string;
+      postalCode?: string;
+      bio?: string;
     },
   ) {
     return this.authService.signup(
@@ -29,6 +36,13 @@ export class AuthController {
       body.email,
       body.userName,
       body.password,
+      body.dob,
+      body.phone,
+      body.address,
+      body.city,
+      body.country,
+      body.postalCode,
+      body.bio,
     );
   }
 
